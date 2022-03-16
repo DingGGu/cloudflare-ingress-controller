@@ -135,10 +135,6 @@ func main() {
 			// cloudflared metrics currently assumes prometheus, uses the global registry
 			// and does not differential by tunnel (e.g. assumes a daemon per tunnel)
 			promregistry := prometheus.NewRegistry()
-			promregistry.MustRegister(
-				prometheus.NewProcessCollector(os.Getpid(), ""),
-				prometheus.NewGoCollector(),
-			)
 
 			metricServerMux := http.NewServeMux()
 			metricServerMux.Handle("/metrics", promhttp.HandlerFor(promregistry, promhttp.HandlerOpts{}))

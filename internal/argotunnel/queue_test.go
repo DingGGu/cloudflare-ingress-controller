@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -110,21 +110,21 @@ func TestIngressFilterFunc(t *testing.T) {
 		},
 		"obj-ing-no-class": {
 			ingclass: "",
-			obj: &v1beta1.Ingress{
+			obj: &networkingv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "unit",
 					Namespace: "unit",
 				},
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "v1beta1",
+					APIVersion: "networkingv1",
 				},
 			},
 			out: false,
 		},
 		"obj-ing-mismatch-class": {
 			ingclass: "unit",
-			obj: &v1beta1.Ingress{
+			obj: &networkingv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "unit",
 					Namespace: "unit",
@@ -134,14 +134,14 @@ func TestIngressFilterFunc(t *testing.T) {
 				},
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "v1beta1",
+					APIVersion: "networkingv1",
 				},
 			},
 			out: false,
 		},
 		"obj-ing-match-class": {
 			ingclass: "unit",
-			obj: &v1beta1.Ingress{
+			obj: &networkingv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "unit",
 					Namespace: "unit",
@@ -151,7 +151,7 @@ func TestIngressFilterFunc(t *testing.T) {
 				},
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "v1beta1",
+					APIVersion: "networkingv1",
 				},
 			},
 			out: true,
@@ -436,4 +436,7 @@ func (q *mockQueue) Forget(item interface{}) {
 func (q *mockQueue) NumRequeues(item interface{}) int {
 	args := q.Called(item)
 	return args.Get(0).(int)
+}
+func (q *mockQueue) ShutDownWithDrain() {
+	q.Called()
 }

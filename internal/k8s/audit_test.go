@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	networkingv1 "k8s.io/api/networking/v1"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -389,21 +390,25 @@ func TestGetServicePort(t *testing.T) {
 	t.Parallel()
 	for name, test := range map[string]struct {
 		obj      *v1.Service
-		port     intstr.IntOrString
+		port     networkingv1.ServiceBackendPort
 		protocol v1.Protocol
 		out      v1.ServicePort
 		ok       bool
 	}{
 		"service-nil": {
-			obj:      nil,
-			port:     intstr.FromInt(80),
+			obj: nil,
+			port: networkingv1.ServiceBackendPort{
+				Number: 80,
+			},
 			protocol: v1.ProtocolTCP,
 			out:      v1.ServicePort{},
 			ok:       false,
 		},
 		"service-empty": {
-			obj:      &v1.Service{},
-			port:     intstr.FromInt(80),
+			obj: &v1.Service{},
+			port: networkingv1.ServiceBackendPort{
+				Number: 80,
+			},
 			protocol: v1.ProtocolTCP,
 			out:      v1.ServicePort{},
 			ok:       false,
@@ -435,7 +440,9 @@ func TestGetServicePort(t *testing.T) {
 					},
 				},
 			},
-			port:     intstr.FromString("http"),
+			port: networkingv1.ServiceBackendPort{
+				Name: "http",
+			},
 			protocol: v1.ProtocolTCP,
 			out:      v1.ServicePort{},
 			ok:       false,
@@ -457,7 +464,9 @@ func TestGetServicePort(t *testing.T) {
 					},
 				},
 			},
-			port:     intstr.FromInt(80),
+			port: networkingv1.ServiceBackendPort{
+				Number: 80,
+			},
 			protocol: v1.ProtocolTCP,
 			out:      v1.ServicePort{},
 			ok:       false,
@@ -479,7 +488,9 @@ func TestGetServicePort(t *testing.T) {
 					},
 				},
 			},
-			port:     intstr.FromString("http"),
+			port: networkingv1.ServiceBackendPort{
+				Name: "http",
+			},
 			protocol: v1.ProtocolTCP,
 			out:      v1.ServicePort{},
 			ok:       false,
@@ -501,7 +512,9 @@ func TestGetServicePort(t *testing.T) {
 					},
 				},
 			},
-			port:     intstr.FromInt(8080),
+			port: networkingv1.ServiceBackendPort{
+				Number: 8080,
+			},
 			protocol: v1.ProtocolTCP,
 			out:      v1.ServicePort{},
 			ok:       false,
@@ -523,7 +536,9 @@ func TestGetServicePort(t *testing.T) {
 					},
 				},
 			},
-			port:     intstr.FromString("http"),
+			port: networkingv1.ServiceBackendPort{
+				Name: "http",
+			},
 			protocol: v1.ProtocolTCP,
 			out: v1.ServicePort{
 				Name:     "http",
@@ -549,7 +564,9 @@ func TestGetServicePort(t *testing.T) {
 					},
 				},
 			},
-			port:     intstr.FromInt(9090),
+			port: networkingv1.ServiceBackendPort{
+				Number: 9090,
+			},
 			protocol: v1.ProtocolTCP,
 			out: v1.ServicePort{
 				Name:     "grpc",

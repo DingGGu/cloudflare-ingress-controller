@@ -2,11 +2,11 @@ package argotunnel
 
 import (
 	"fmt"
+	networkingv1 "k8s.io/api/networking/v1"
 	"strings"
 	"time"
 
 	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -57,7 +57,7 @@ func newEndpointInformer(client kubernetes.Interface, opts options, rs ...cache.
 }
 
 func newIngressInformer(client kubernetes.Interface, opts options, rs ...cache.ResourceEventHandler) cache.SharedIndexInformer {
-	i := newInformer(client.ExtensionsV1beta1().RESTClient(), opts.watchNamespace, "ingresses", new(v1beta1.Ingress), opts.resyncPeriod, rs...)
+	i := newInformer(client.NetworkingV1().RESTClient(), opts.watchNamespace, "ingresses", new(networkingv1.Ingress), opts.resyncPeriod, rs...)
 	i.AddIndexers(cache.Indexers{
 		secretKind:  ingressSecretIndexFunc(opts.ingressClass, opts.originSecrets, opts.domainSecrets, opts.secret),
 		serviceKind: ingressServiceIndexFunc(opts.ingressClass),
@@ -86,7 +86,7 @@ func newInformer(c cache.Getter, namespace string, resource string, objType runt
 
 func ingressSecretIndexFunc(ingressClass string, originSecrets map[string]*resource, domainSecrets map[string]*resource, secret *resource) func(obj interface{}) ([]string, error) {
 	return func(obj interface{}) ([]string, error) {
-		if ing, ok := obj.(*v1beta1.Ingress); ok {
+		if ing, ok := obj.(*networkingv1.Ingress); ok {
 			var idx []string
 			if objIngClass, ok := parseIngressClass(ing); ok && ingressClass == objIngClass {
 				hostsecret := make(map[string]*resource)
@@ -122,14 +122,14 @@ func ingressSecretIndexFunc(ingressClass string, originSecrets map[string]*resou
 
 func ingressServiceIndexFunc(ingressClass string) func(obj interface{}) ([]string, error) {
 	return func(obj interface{}) ([]string, error) {
-		if ing, ok := obj.(*v1beta1.Ingress); ok {
+		if ing, ok := obj.(*networkingv1.Ingress); ok {
 			var idx []string
 			if objIngClass, ok := parseIngressClass(ing); ok && ingressClass == objIngClass {
 				for _, rule := range ing.Spec.Rules {
 					if rule.HTTP != nil && len(rule.Host) > 0 {
 						for _, path := range rule.HTTP.Paths {
-							if len(path.Backend.ServiceName) > 0 {
-								idx = append(idx, itemKeyFunc(ing.Namespace, path.Backend.ServiceName))
+							if len(path.Backend.Service.Name) > 0 {
+								idx = append(idx, itemKeyFunc(ing.Namespace, path.Backend.Service.Name))
 							}
 						}
 					}

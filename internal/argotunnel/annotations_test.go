@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -13,20 +13,20 @@ import (
 func TestParseIngressClassAnnotation(t *testing.T) {
 	t.Parallel()
 	for name, test := range map[string]struct {
-		in  *v1beta1.Ingress
+		in  *networkingv1.Ingress
 		out string
 		ok  bool
 	}{
 		"empty-ingress": {
-			in:  &v1beta1.Ingress{},
+			in:  &networkingv1.Ingress{},
 			out: "",
 			ok:  false,
 		},
 		"without-ingress-class": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -40,10 +40,10 @@ func TestParseIngressClassAnnotation(t *testing.T) {
 			ok:  false,
 		},
 		"with-ingress-class": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -66,18 +66,18 @@ func TestParseIngressClassAnnotation(t *testing.T) {
 func TestParseIngressTunnelOptions(t *testing.T) {
 	t.Parallel()
 	for name, test := range map[string]struct {
-		in  *v1beta1.Ingress
+		in  *networkingv1.Ingress
 		out tunnelOptions
 	}{
 		"empty-ingress": {
-			in:  &v1beta1.Ingress{},
+			in:  &networkingv1.Ingress{},
 			out: collectTunnelOptions(nil),
 		},
 		"without-options": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -90,10 +90,10 @@ func TestParseIngressTunnelOptions(t *testing.T) {
 			out: collectTunnelOptions(nil),
 		},
 		"without-some-options": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -115,10 +115,10 @@ func TestParseIngressTunnelOptions(t *testing.T) {
 			},
 		},
 		"with-all-options": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -155,20 +155,20 @@ func TestParseIngressTunnelOptions(t *testing.T) {
 func TestParseMetaBool(t *testing.T) {
 	t.Parallel()
 	for name, test := range map[string]struct {
-		in  *v1beta1.Ingress
+		in  *networkingv1.Ingress
 		out bool
 		ok  bool
 	}{
 		"empty-meta": {
-			in:  &v1beta1.Ingress{},
+			in:  &networkingv1.Ingress{},
 			out: false,
 			ok:  false,
 		},
 		"with-any-other-value": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -182,10 +182,10 @@ func TestParseMetaBool(t *testing.T) {
 			ok:  false,
 		},
 		"with-false": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -199,10 +199,10 @@ func TestParseMetaBool(t *testing.T) {
 			ok:  true,
 		},
 		"with-true": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -226,20 +226,20 @@ func TestParseMetaBool(t *testing.T) {
 func TestParseMetaDuration(t *testing.T) {
 	t.Parallel()
 	for name, test := range map[string]struct {
-		in  *v1beta1.Ingress
+		in  *networkingv1.Ingress
 		out time.Duration
 		ok  bool
 	}{
 		"empty-ingress": {
-			in:  &v1beta1.Ingress{},
+			in:  &networkingv1.Ingress{},
 			out: 0,
 			ok:  false,
 		},
 		"with-non-duration": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -253,10 +253,10 @@ func TestParseMetaDuration(t *testing.T) {
 			ok:  false,
 		},
 		"with-duration": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -280,20 +280,20 @@ func TestParseMetaDuration(t *testing.T) {
 func TestParseMetaInt(t *testing.T) {
 	t.Parallel()
 	for name, test := range map[string]struct {
-		in  *v1beta1.Ingress
+		in  *networkingv1.Ingress
 		out uint
 		ok  bool
 	}{
 		"empty-ingress": {
-			in:  &v1beta1.Ingress{},
+			in:  &networkingv1.Ingress{},
 			out: 0,
 			ok:  false,
 		},
 		"with-non-int": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -307,10 +307,10 @@ func TestParseMetaInt(t *testing.T) {
 			ok:  false,
 		},
 		"with-int": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -334,20 +334,20 @@ func TestParseMetaInt(t *testing.T) {
 func TestParseMetaUint(t *testing.T) {
 	t.Parallel()
 	for name, test := range map[string]struct {
-		in  *v1beta1.Ingress
+		in  *networkingv1.Ingress
 		out uint
 		ok  bool
 	}{
 		"empty-ingress": {
-			in:  &v1beta1.Ingress{},
+			in:  &networkingv1.Ingress{},
 			out: 0,
 			ok:  false,
 		},
 		"with-non-uint": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -361,10 +361,10 @@ func TestParseMetaUint(t *testing.T) {
 			ok:  false,
 		},
 		"with-uint": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -388,20 +388,20 @@ func TestParseMetaUint(t *testing.T) {
 func TestParseMetaUint64(t *testing.T) {
 	t.Parallel()
 	for name, test := range map[string]struct {
-		in  *v1beta1.Ingress
+		in  *networkingv1.Ingress
 		out uint
 		ok  bool
 	}{
 		"empty-ingress": {
-			in:  &v1beta1.Ingress{},
+			in:  &networkingv1.Ingress{},
 			out: 0,
 			ok:  false,
 		},
 		"with-non-uint64": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
@@ -415,10 +415,10 @@ func TestParseMetaUint64(t *testing.T) {
 			ok:  false,
 		},
 		"with-uint64": {
-			in: &v1beta1.Ingress{
+			in: &networkingv1.Ingress{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "extensions/v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",

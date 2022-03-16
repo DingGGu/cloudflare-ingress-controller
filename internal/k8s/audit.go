@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -53,18 +54,14 @@ func GetSecretCert(sec *v1.Secret) (cert []byte, exists bool) {
 }
 
 // GetServicePort extracts the matching service port
-func GetServicePort(svc *v1.Service, port intstr.IntOrString, protocol v1.Protocol) (val v1.ServicePort, exists bool) {
+func GetServicePort(svc *v1.Service, port networkingv1.ServiceBackendPort, protocol v1.Protocol) (val v1.ServicePort, exists bool) {
 	if svc != nil {
 		for _, servicePort := range svc.Spec.Ports {
-			switch port.Type {
-			case intstr.Int:
-				if servicePort.Port == port.IntVal && servicePort.Protocol == protocol {
-					return servicePort, true
-				}
-			case intstr.String:
-				if servicePort.Name == port.StrVal && servicePort.Protocol == protocol {
-					return servicePort, true
-				}
+			if port.Number != 0 && servicePort.Port == port.Number && servicePort.Protocol == protocol {
+				return servicePort, true
+			}
+			if port.Name != "" && servicePort.Name == port.Name && servicePort.Protocol == protocol {
+				return servicePort, true
 			}
 		}
 	}

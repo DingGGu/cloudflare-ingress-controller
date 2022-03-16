@@ -2,14 +2,13 @@ package argotunnel
 
 import (
 	"fmt"
+	networkingv1 "k8s.io/api/networking/v1"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -36,7 +35,7 @@ func TestIngressSecretIndexFunc(t *testing.T) {
 			err: fmt.Errorf("index unexpected obj type: %T", &unit{}),
 		},
 		"obj-ing-class-mismatch": {
-			obj: &v1beta1.Ingress{
+			obj: &networkingv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "unit",
 					Namespace: "unit",
@@ -46,10 +45,10 @@ func TestIngressSecretIndexFunc(t *testing.T) {
 				},
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "v1beta1",
+					APIVersion: "networkingv1",
 				},
-				Spec: v1beta1.IngressSpec{
-					TLS: []v1beta1.IngressTLS{
+				Spec: networkingv1.IngressSpec{
+					TLS: []networkingv1.IngressTLS{
 						{
 							Hosts: []string{
 								"a.unit.com",
@@ -57,11 +56,11 @@ func TestIngressSecretIndexFunc(t *testing.T) {
 							SecretName: "sec-a",
 						},
 					},
-					Rules: []v1beta1.IngressRule{
+					Rules: []networkingv1.IngressRule{
 						{
 							Host: "a.unit.com",
-							IngressRuleValue: v1beta1.IngressRuleValue{
-								HTTP: &v1beta1.HTTPIngressRuleValue{},
+							IngressRuleValue: networkingv1.IngressRuleValue{
+								HTTP: &networkingv1.HTTPIngressRuleValue{},
 							},
 						},
 					},
@@ -71,7 +70,7 @@ func TestIngressSecretIndexFunc(t *testing.T) {
 			err: nil,
 		},
 		"obj-ing-secs": {
-			obj: &v1beta1.Ingress{
+			obj: &networkingv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "unit",
 					Namespace: "unit",
@@ -81,10 +80,10 @@ func TestIngressSecretIndexFunc(t *testing.T) {
 				},
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "v1beta1",
+					APIVersion: "networkingv1",
 				},
-				Spec: v1beta1.IngressSpec{
-					TLS: []v1beta1.IngressTLS{
+				Spec: networkingv1.IngressSpec{
+					TLS: []networkingv1.IngressTLS{
 						{
 							Hosts: []string{
 								"a.unit.com",
@@ -104,29 +103,29 @@ func TestIngressSecretIndexFunc(t *testing.T) {
 							SecretName: "sec-f",
 						},
 					},
-					Rules: []v1beta1.IngressRule{
+					Rules: []networkingv1.IngressRule{
 						{
 							Host: "a.unit.com",
-							IngressRuleValue: v1beta1.IngressRuleValue{
-								HTTP: &v1beta1.HTTPIngressRuleValue{},
+							IngressRuleValue: networkingv1.IngressRuleValue{
+								HTTP: &networkingv1.HTTPIngressRuleValue{},
 							},
 						},
 						{
 							Host: "b.unit.com",
-							IngressRuleValue: v1beta1.IngressRuleValue{
-								HTTP: &v1beta1.HTTPIngressRuleValue{},
+							IngressRuleValue: networkingv1.IngressRuleValue{
+								HTTP: &networkingv1.HTTPIngressRuleValue{},
 							},
 						},
 						{
 							Host: "c.unit.com",
-							IngressRuleValue: v1beta1.IngressRuleValue{
-								HTTP: &v1beta1.HTTPIngressRuleValue{},
+							IngressRuleValue: networkingv1.IngressRuleValue{
+								HTTP: &networkingv1.HTTPIngressRuleValue{},
 							},
 						},
 						{
 							Host: "d.unit.com",
-							IngressRuleValue: v1beta1.IngressRuleValue{
-								HTTP: &v1beta1.HTTPIngressRuleValue{},
+							IngressRuleValue: networkingv1.IngressRuleValue{
+								HTTP: &networkingv1.HTTPIngressRuleValue{},
 							},
 						},
 					},
@@ -169,7 +168,7 @@ func TestIngressServiceIndexFunc(t *testing.T) {
 			err: fmt.Errorf("index unexpected obj type: %T", &unit{}),
 		},
 		"obj-ing-class-mismatch": {
-			obj: &v1beta1.Ingress{
+			obj: &networkingv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "unit",
 					Namespace: "unit",
@@ -179,19 +178,23 @@ func TestIngressServiceIndexFunc(t *testing.T) {
 				},
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "v1beta1",
+					APIVersion: "networkingv1",
 				},
-				Spec: v1beta1.IngressSpec{
-					Rules: []v1beta1.IngressRule{
+				Spec: networkingv1.IngressSpec{
+					Rules: []networkingv1.IngressRule{
 						{
 							Host: "a.unit.com",
-							IngressRuleValue: v1beta1.IngressRuleValue{
-								HTTP: &v1beta1.HTTPIngressRuleValue{
-									Paths: []v1beta1.HTTPIngressPath{
+							IngressRuleValue: networkingv1.IngressRuleValue{
+								HTTP: &networkingv1.HTTPIngressRuleValue{
+									Paths: []networkingv1.HTTPIngressPath{
 										{
-											Backend: v1beta1.IngressBackend{
-												ServiceName: "svc-a",
-												ServicePort: intstr.FromString("http"),
+											Backend: networkingv1.IngressBackend{
+												Service: &networkingv1.IngressServiceBackend{
+													Name: "svc-a",
+													Port: networkingv1.ServiceBackendPort{
+														Name: "http",
+													},
+												},
 											},
 										},
 									},
@@ -205,7 +208,7 @@ func TestIngressServiceIndexFunc(t *testing.T) {
 			err: nil,
 		},
 		"obj-ing-svcs": {
-			obj: &v1beta1.Ingress{
+			obj: &networkingv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "unit",
 					Namespace: "unit",
@@ -215,31 +218,43 @@ func TestIngressServiceIndexFunc(t *testing.T) {
 				},
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "v1beta1",
+					APIVersion: "networkingv1",
 				},
-				Spec: v1beta1.IngressSpec{
-					Rules: []v1beta1.IngressRule{
+				Spec: networkingv1.IngressSpec{
+					Rules: []networkingv1.IngressRule{
 						{
 							Host: "a.unit.com",
-							IngressRuleValue: v1beta1.IngressRuleValue{
-								HTTP: &v1beta1.HTTPIngressRuleValue{
-									Paths: []v1beta1.HTTPIngressPath{
+							IngressRuleValue: networkingv1.IngressRuleValue{
+								HTTP: &networkingv1.HTTPIngressRuleValue{
+									Paths: []networkingv1.HTTPIngressPath{
 										{
-											Backend: v1beta1.IngressBackend{
-												ServiceName: "svc-a",
-												ServicePort: intstr.FromString("http"),
+											Backend: networkingv1.IngressBackend{
+												Service: &networkingv1.IngressServiceBackend{
+													Name: "svc-a",
+													Port: networkingv1.ServiceBackendPort{
+														Name: "http",
+													},
+												},
 											},
 										},
 										{
-											Backend: v1beta1.IngressBackend{
-												ServiceName: "",
-												ServicePort: intstr.FromString("http"),
+											Backend: networkingv1.IngressBackend{
+												Service: &networkingv1.IngressServiceBackend{
+													Name: "",
+													Port: networkingv1.ServiceBackendPort{
+														Name: "http",
+													},
+												},
 											},
 										},
 										{
-											Backend: v1beta1.IngressBackend{
-												ServiceName: "svc-c",
-												ServicePort: intstr.FromString("http"),
+											Backend: networkingv1.IngressBackend{
+												Service: &networkingv1.IngressServiceBackend{
+													Name: "svc-c",
+													Port: networkingv1.ServiceBackendPort{
+														Name: "http",
+													},
+												},
 											},
 										},
 									},
@@ -248,25 +263,37 @@ func TestIngressServiceIndexFunc(t *testing.T) {
 						},
 						{
 							Host: "b.unit.com",
-							IngressRuleValue: v1beta1.IngressRuleValue{
-								HTTP: &v1beta1.HTTPIngressRuleValue{
-									Paths: []v1beta1.HTTPIngressPath{
+							IngressRuleValue: networkingv1.IngressRuleValue{
+								HTTP: &networkingv1.HTTPIngressRuleValue{
+									Paths: []networkingv1.HTTPIngressPath{
 										{
-											Backend: v1beta1.IngressBackend{
-												ServiceName: "svc-d",
-												ServicePort: intstr.FromString("http"),
+											Backend: networkingv1.IngressBackend{
+												Service: &networkingv1.IngressServiceBackend{
+													Name: "svc-d",
+													Port: networkingv1.ServiceBackendPort{
+														Name: "http",
+													},
+												},
 											},
 										},
 										{
-											Backend: v1beta1.IngressBackend{
-												ServiceName: "",
-												ServicePort: intstr.FromString("http"),
+											Backend: networkingv1.IngressBackend{
+												Service: &networkingv1.IngressServiceBackend{
+													Name: "",
+													Port: networkingv1.ServiceBackendPort{
+														Name: "http",
+													},
+												},
 											},
 										},
 										{
-											Backend: v1beta1.IngressBackend{
-												ServiceName: "svc-f",
-												ServicePort: intstr.FromString("http"),
+											Backend: networkingv1.IngressBackend{
+												Service: &networkingv1.IngressServiceBackend{
+													Name: "svc-f",
+													Port: networkingv1.ServiceBackendPort{
+														Name: "http",
+													},
+												},
 											},
 										},
 									},
@@ -457,6 +484,10 @@ func (i *mockSharedIndexInformer) AddIndexers(indexers cache.Indexers) error {
 func (i *mockSharedIndexInformer) GetIndexer() cache.Indexer {
 	args := i.Called()
 	return args.Get(0).(cache.Indexer)
+}
+func (i *mockSharedIndexInformer) SetWatchErrorHandler(handler cache.WatchErrorHandler) error {
+	args := i.Called(handler)
+	return args.Error(0)
 }
 
 type mockIndexer struct {

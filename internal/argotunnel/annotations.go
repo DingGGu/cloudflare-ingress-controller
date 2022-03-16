@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -21,7 +21,7 @@ const (
 	annotationIngressTag                = "argo.cloudflare.com/tag"
 )
 
-func parseIngressTunnelOptions(ing *v1beta1.Ingress) (opts []tunnelOption) {
+func parseIngressTunnelOptions(ing *networkingv1.Ingress) (opts []tunnelOption) {
 	if ingMeta, err := meta.Accessor(ing); err == nil {
 		if val, ok := parseMetaUint64(ingMeta, annotationIngressCompressionQuality); ok {
 			opts = append(opts, compressionQuality(val))
@@ -99,7 +99,7 @@ func parseMetaUint64(obj metav1.Object, key string) (val uint64, ok bool) {
 	return
 }
 
-func parseIngressClass(ing *v1beta1.Ingress) (val string, ok bool) {
+func parseIngressClass(ing *networkingv1.Ingress) (val string, ok bool) {
 	if ingMeta, err := meta.Accessor(ing); err == nil {
 		val, ok = ingMeta.GetAnnotations()[annotationIngressClass]
 	}

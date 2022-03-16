@@ -2,12 +2,12 @@ package argotunnel
 
 import (
 	"fmt"
+	networkingv1 "k8s.io/api/networking/v1"
+	"strconv"
 
 	"github.com/cloudflare/cloudflare-ingress-controller/internal/k8s"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -102,7 +102,7 @@ func (t *syncTranslator) updateByKind(kind, key string) (err error) {
 
 	routes := make([]*tunnelRoute, 0, len(objs))
 	for _, obj := range objs {
-		if route := t.getRouteFromIngress(obj.(*v1beta1.Ingress)); route != nil {
+		if route := t.getRouteFromIngress(obj.(*networkingv1.Ingress)); route != nil {
 			routes = append(routes, route)
 		}
 	}
@@ -131,7 +131,7 @@ func (t *syncTranslator) handleIngress(kind, key string) (err error) {
 	obj, exists, err := t.informers.ingress.GetIndexer().GetByKey(key)
 	if err == nil {
 		if exists {
-			err = t.updateIngress(key, obj.(*v1beta1.Ingress))
+			err = t.updateIngress(key, obj.(*networkingv1.Ingress))
 		} else {
 			err = t.deleteIngress(key)
 		}
@@ -139,7 +139,7 @@ func (t *syncTranslator) handleIngress(kind, key string) (err error) {
 	return
 }
 
-func (t *syncTranslator) updateIngress(key string, ing *v1beta1.Ingress) (err error) {
+func (t *syncTranslator) updateIngress(key string, ing *networkingv1.Ingress) (err error) {
 	t.log.Debugf("translator update ingress: %s", key)
 	if route := t.getRouteFromIngress(ing); route != nil {
 		err = t.router.updateRoute(route)
@@ -158,7 +158,7 @@ func (t *syncTranslator) deleteIngress(key string) (err error) {
 	return
 }
 
-func (t *syncTranslator) getRouteFromIngress(ing *v1beta1.Ingress) (r *tunnelRoute) {
+func (t *syncTranslator) getRouteFromIngress(ing *networkingv1.Ingress) (r *tunnelRoute) {
 	// TODO: update function to allow specific failure detection for testing
 	switch {
 	case ing == nil:
@@ -220,7 +220,7 @@ func (t *syncTranslator) getRouteFromIngress(ing *v1beta1.Ingress) (r *tunnelRou
 				t.log.Errorf("translator path routing not supported on ingress: %s, host: %s, path: %+v", ingkey, host, path)
 				continue
 			}
-			if len(path.Backend.ServiceName) == 0 {
+			if len(path.Backend.Service.Name) == 0 {
 				t.log.Errorf("translator service empty on ingress: %s, host: %s, path: %+v", ingkey, host, path)
 				continue
 			}
@@ -230,7 +230,7 @@ func (t *syncTranslator) getRouteFromIngress(ing *v1beta1.Ingress) (r *tunnelRou
 			{
 				var err error
 				var exists bool
-				port, exists, err = t.getVerifiedPort(ing.Namespace, path.Backend.ServiceName, path.Backend.ServicePort)
+				port, exists, err = t.getVerifiedPort(ing.Namespace, path.Backend.Service.Name, path.Backend.Service.Port)
 				if err != nil {
 					t.log.Errorf("translator service issue on ingress: %s, host: %s, path: %+v, err: %q", ingkey, host, path, err)
 					continue
@@ -246,7 +246,7 @@ func (t *syncTranslator) getRouteFromIngress(ing *v1beta1.Ingress) (r *tunnelRou
 				port: port,
 				service: resource{
 					namespace: ing.Namespace,
-					name:      path.Backend.ServiceName,
+					name:      path.Backend.Service.Name,
 				},
 				secret: *secret,
 			}
@@ -285,7 +285,7 @@ func (t *syncTranslator) getVerifiedCert(namespace, name, host string) (cert []b
 	return
 }
 
-func (t *syncTranslator) getVerifiedPort(namespace, name string, port intstr.IntOrString) (val int32, exists bool, err error) {
+func (t *syncTranslator) getVerifiedPort(namespace, name string, port networkingv1.ServiceBackendPort) (val int32, exists bool, err error) {
 	key := itemKeyFunc(namespace, name)
 	obj, exists, err := t.informers.service.GetIndexer().GetByKey(key)
 	if err != nil {
@@ -297,7 +297,7 @@ func (t *syncTranslator) getVerifiedPort(namespace, name string, port intstr.Int
 
 	svcport, exists := k8s.GetServicePort(obj.(*v1.Service), port, v1.ProtocolTCP)
 	if !exists {
-		err = fmt.Errorf("service '%s' missing port '%s'", key, port.String())
+		err = fmt.Errorf("service '%s' missing port '%s'", key, GetBackendPort(port))
 		return
 	}
 
@@ -311,10 +311,20 @@ func (t *syncTranslator) getVerifiedPort(namespace, name string, port intstr.Int
 
 	exists = k8s.HasEndpointsAddresses(obj.(*v1.Endpoints))
 	if !exists {
-		err = fmt.Errorf("endpoints '%s' missing subsets for port '%s'", key, port.String())
+		err = fmt.Errorf("endpoints '%s' missing subsets for port '%s'", key, GetBackendPort(port))
 		return
 	}
 
 	val = svcport.Port
 	return
+}
+
+func GetBackendPort(port networkingv1.ServiceBackendPort) string {
+	if port.Number != 0 {
+		return strconv.Itoa(int(port.Number))
+	}
+	if port.Name != "" {
+		return port.Name
+	}
+	return ""
 }

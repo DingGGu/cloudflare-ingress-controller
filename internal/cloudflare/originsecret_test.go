@@ -60,7 +60,7 @@ func TestOriginSecrets(t *testing.T) {
 			err: []error{
 				fmt.Errorf("group at index 0, host at index 0 must be non-empty"),
 				fmt.Errorf(`group at index 0, host "*.*.test.com" at index 1 a wildcard DNS-1123 subdomain must start with '*.', followed by a valid DNS subdomain, which must consist of lower case alphanumeric characters, '-' or '.' and end with an alphanumeric character (e.g. '*.example.com', regex used for validation is '\*\.[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')`),
-				fmt.Errorf(`group at index 0, host "#@!.test.com" at index 2 a DNS-1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')`),
+				fmt.Errorf(`group at index 0, host "#@!.test.com" at index 2 a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')`),
 			},
 		},
 		"obj-bad-secret-name-in-group": {

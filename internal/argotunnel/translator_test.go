@@ -2,13 +2,13 @@ package argotunnel
 
 import (
 	"fmt"
+	networkingv1 "k8s.io/api/networking/v1"
 	"testing"
 
 	logtest "github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/cache"
@@ -326,7 +326,7 @@ func TestGetRouteFromIngress(t *testing.T) {
 	t.Parallel()
 	for name, test := range map[string]struct {
 		tr  *syncTranslator
-		ing *v1beta1.Ingress
+		ing *networkingv1.Ingress
 		out *tunnelRoute
 	}{
 		"ing-nil": {
@@ -336,18 +336,18 @@ func TestGetRouteFromIngress(t *testing.T) {
 		},
 		"ing-empty": {
 			tr: newMockedSyncTranslator(),
-			ing: &v1beta1.Ingress{
+			ing: &networkingv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "unit",
 					Namespace: "unit",
 				},
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
-				Spec: v1beta1.IngressSpec{
-					TLS:   []v1beta1.IngressTLS{},
-					Rules: []v1beta1.IngressRule{},
+				Spec: networkingv1.IngressSpec{
+					TLS:   []networkingv1.IngressTLS{},
+					Rules: []networkingv1.IngressRule{},
 				},
 			},
 			out: &tunnelRoute{
@@ -419,17 +419,17 @@ func TestGetRouteFromIngress(t *testing.T) {
 					return r
 				}(),
 			},
-			ing: &v1beta1.Ingress{
+			ing: &networkingv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "unit",
 					Namespace: "unit",
 				},
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Ingress",
-					APIVersion: "v1beta1",
+					APIVersion: "networking.k8s.io/v1",
 				},
-				Spec: v1beta1.IngressSpec{
-					TLS: []v1beta1.IngressTLS{
+				Spec: networkingv1.IngressSpec{
+					TLS: []networkingv1.IngressTLS{
 						{
 							Hosts: []string{
 								"a.unit.com",
@@ -437,16 +437,20 @@ func TestGetRouteFromIngress(t *testing.T) {
 							SecretName: "sec-a",
 						},
 					},
-					Rules: []v1beta1.IngressRule{
+					Rules: []networkingv1.IngressRule{
 						{
 							Host: "a.unit.com",
-							IngressRuleValue: v1beta1.IngressRuleValue{
-								HTTP: &v1beta1.HTTPIngressRuleValue{
-									Paths: []v1beta1.HTTPIngressPath{
+							IngressRuleValue: networkingv1.IngressRuleValue{
+								HTTP: &networkingv1.HTTPIngressRuleValue{
+									Paths: []networkingv1.HTTPIngressPath{
 										{
-											Backend: v1beta1.IngressBackend{
-												ServiceName: "svc-a",
-												ServicePort: intstr.FromString("http"),
+											Backend: networkingv1.IngressBackend{
+												Service: &networkingv1.IngressServiceBackend{
+													Name: "svc-a",
+													Port: networkingv1.ServiceBackendPort{
+														Name: "http",
+													},
+												},
 											},
 										},
 									},
@@ -623,7 +627,7 @@ func TestGetVerifiedPort(t *testing.T) {
 	for name, test := range map[string]struct {
 		tr      *syncTranslator
 		service resource
-		port    intstr.IntOrString
+		port    networkingv1.ServiceBackendPort
 		out     int32
 		exists  bool
 		err     error
@@ -647,7 +651,9 @@ func TestGetVerifiedPort(t *testing.T) {
 				namespace: "unit",
 				name:      "svc-a",
 			},
-			port:   intstr.FromInt(8080),
+			port: networkingv1.ServiceBackendPort{
+				Number: 8080,
+			},
 			out:    0,
 			exists: false,
 			err:    fmt.Errorf("service 'unit/svc-a' does not exist"),
@@ -671,7 +677,9 @@ func TestGetVerifiedPort(t *testing.T) {
 				namespace: "unit",
 				name:      "svc-a",
 			},
-			port:   intstr.FromInt(8080),
+			port: networkingv1.ServiceBackendPort{
+				Number: 8080,
+			},
 			out:    0,
 			exists: false,
 			err:    fmt.Errorf("lookup-error"),
@@ -705,7 +713,9 @@ func TestGetVerifiedPort(t *testing.T) {
 				namespace: "unit",
 				name:      "svc-a",
 			},
-			port:   intstr.FromString("port-b"),
+			port: networkingv1.ServiceBackendPort{
+				Name: "port-b",
+			},
 			out:    0,
 			exists: false,
 			err:    fmt.Errorf("service 'unit/svc-a' missing port 'port-b'"),
@@ -748,7 +758,9 @@ func TestGetVerifiedPort(t *testing.T) {
 				namespace: "unit",
 				name:      "svc-a",
 			},
-			port:   intstr.FromInt(8080),
+			port: networkingv1.ServiceBackendPort{
+				Number: 8080,
+			},
 			out:    0,
 			exists: false,
 			err:    fmt.Errorf("endpoints 'unit/svc-a' do not exist"),
@@ -791,7 +803,9 @@ func TestGetVerifiedPort(t *testing.T) {
 				namespace: "unit",
 				name:      "svc-a",
 			},
-			port:   intstr.FromInt(8080),
+			port: networkingv1.ServiceBackendPort{
+				Number: 8080,
+			},
 			out:    0,
 			exists: false,
 			err:    fmt.Errorf("lookup-error"),
@@ -837,7 +851,9 @@ func TestGetVerifiedPort(t *testing.T) {
 				namespace: "unit",
 				name:      "svc-a",
 			},
-			port:   intstr.FromInt(8080),
+			port: networkingv1.ServiceBackendPort{
+				Number: 8080,
+			},
 			out:    0,
 			exists: false,
 			err:    fmt.Errorf("endpoints 'unit/svc-a' missing subsets for port '8080'"),
@@ -892,7 +908,9 @@ func TestGetVerifiedPort(t *testing.T) {
 				namespace: "unit",
 				name:      "svc-a",
 			},
-			port:   intstr.FromInt(8080),
+			port: networkingv1.ServiceBackendPort{
+				Number: 8080,
+			},
 			out:    8080,
 			exists: true,
 			err:    nil,

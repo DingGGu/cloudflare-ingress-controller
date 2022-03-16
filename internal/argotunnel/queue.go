@@ -2,11 +2,11 @@ package argotunnel
 
 import (
 	"fmt"
+	networkingv1 "k8s.io/api/networking/v1"
 	"strings"
 
 	"github.com/cloudflare/cloudflare-ingress-controller/internal/k8s"
 	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/client-go/tools/cache"
@@ -79,7 +79,7 @@ func endpointFilterFunc() func(obj interface{}) bool {
 
 func ingressFilterFunc(ingressClass string) func(obj interface{}) bool {
 	return func(obj interface{}) bool {
-		if ing, ok := obj.(*v1beta1.Ingress); ok {
+		if ing, ok := obj.(*networkingv1.Ingress); ok {
 			if objIngressClass, ok := parseIngressClass(ing); ok {
 				return ingressClass == objIngressClass
 			}

@@ -69,11 +69,6 @@ $(JOBS): job-%: push-%
 	$(eval $@_ARCH := $$(firstword $(subst -, ,$*)))
 	$(eval MANIFESTS += $(IMAGE)-$($@_ARCH):$(VERSION))
 
-.PHONY: dep
-dep:
-	@echo ensure dependencies
-	@dep ensure -vendor-only -v
-
 .PHONY: fmt
 fmt:  
 	@echo checking code is formatted

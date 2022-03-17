@@ -1,11 +1,10 @@
-FROM golang:1.10.8 AS build
+FROM golang:1.17.6 AS build
 WORKDIR /go/src/github.com/cloudflare/cloudflare-ingress-controller
 
 ARG VERSION="unknown"
 
-RUN go get github.com/golang/dep/cmd/dep
-COPY Gopkg.toml Gopkg.lock ./
-RUN dep ensure -v -vendor-only
+COPY go.mod go.mod
+COPY go.sum go.sum
 
 COPY cmd cmd
 COPY internal internal
